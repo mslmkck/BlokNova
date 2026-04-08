@@ -1,0 +1,47 @@
+name: block_tower
+description: "3D Physics Block Stacking Tower Game"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  
+  # Game Engine
+  flame: ^1.18.0
+  
+  # State Management
+  flutter_riverpod: ^2.5.1
+  
+  # Storage
+  shared_preferences: ^2.2.3
+  
+  # Audio
+  audioplayers: ^6.0.0
+  
+  # Haptic Feedback
+  vibration: ^2.0.0
+  
+  # Animations
+  flutter_animate: ^4.5.0
+  
+  # UI
+  google_fonts: ^6.2.1
+  
+  # URL Launcher
+  url_launcher: ^6.2.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/audio/
