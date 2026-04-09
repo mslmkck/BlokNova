@@ -58,32 +58,36 @@ class WeatherSystem extends PositionComponent with HasGameReference {
     }
   }
 
+  final Paint _fogPaint = Paint();
+  final Paint _particlePaint = Paint();
+  final Paint _windPaint = Paint()..strokeWidth = 1;
+  bool _fogPaintInitialized = false;
+
   @override
   void render(Canvas canvas) {
     if (!isEnabled || type == WeatherType.none) return;
 
-    final paint = Paint()..color = Colors.white.withAlpha(type == WeatherType.snow ? 180 : 60);
+    final paint = _particlePaint..color = Colors.white.withAlpha(type == WeatherType.snow ? 180 : 60);
 
     for (var p in _particles) {
       if (type == WeatherType.snow) {
         canvas.drawCircle(Offset(p.x, p.y), p.size, paint);
       } else if (type == WeatherType.wind) {
-        // Draw thin horizontal lines for wind
-        final windPaint = Paint()
-          ..color = Colors.white.withAlpha(40)
-          ..strokeWidth = 1;
+        final windPaint = _windPaint..color = Colors.white.withAlpha(40);
         canvas.drawLine(Offset(p.x, p.y), Offset(p.x + p.size, p.y), windPaint);
       }
     }
     
     if (type == WeatherType.fog) {
-       final fogPaint = Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.bottomCenter,
-          end: Alignment.topCenter,
-          colors: [Colors.white.withAlpha(80), Colors.transparent],
-        ).createShader(const Rect.fromLTWH(0, 400, 360, 300));
-       canvas.drawRect(const Rect.fromLTWH(0, 400, 360, 300), fogPaint);
+       if (!_fogPaintInitialized) {
+         _fogPaint.shader = LinearGradient(
+           begin: Alignment.bottomCenter,
+           end: Alignment.topCenter,
+           colors: [Colors.white.withAlpha(80), Colors.transparent],
+         ).createShader(const Rect.fromLTWH(0, 400, 360, 300));
+         _fogPaintInitialized = true;
+       }
+       canvas.drawRect(const Rect.fromLTWH(0, 400, 360, 300), _fogPaint);
     }
   }
 }

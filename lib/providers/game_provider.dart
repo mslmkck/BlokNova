@@ -29,7 +29,23 @@ class PlayerStatsNotifier extends StateNotifier<PlayerStats> {
 
   Future<void> _loadStats() async {
     state = await _storage.loadStats();
+    _initBadgesIfEmpty();
     await checkAndResetQuests();
+  }
+
+  void _initBadgesIfEmpty() {
+    if (state.badges.isNotEmpty) return;
+
+    final initialBadges = [
+      AchievementBadge(id: 'score_100', title: 'Çırak Mimar', description: '100 skora ulaş', iconName: 'architecture', goal: 100),
+      AchievementBadge(id: 'score_500', title: 'Usta İnşaatçı', description: '500 skora ulaş', iconName: 'construction', goal: 500),
+      AchievementBadge(id: 'level_10', title: 'Yüksekten Bakış', description: 'Seviye 10\'a ulaş', iconName: 'height', goal: 10),
+      AchievementBadge(id: 'combo_10', title: 'Odaklanmış', description: '10 kombo yap', iconName: 'center_focus_strong', goal: 10),
+      AchievementBadge(id: 'games_50', title: 'Kıdemli Oyuncu', description: '50 oyun oyna', iconName: 'military_tech', goal: 50),
+      AchievementBadge(id: 'perfect_100', title: 'Kusursuz', description: 'Toplam 100 mükemmel yerleştirme yap', iconName: 'stars', goal: 100),
+    ];
+
+    state = state.copyWith(badges: initialBadges);
   }
 
   Future<void> checkAndResetQuests() async {
@@ -120,12 +136,49 @@ class PlayerStatsNotifier extends StateNotifier<PlayerStats> {
       coins: state.coins + earnedCoins,
     );
 
+    _updateBadgesProgress(score, level, maxCombo);
+
     await updateQuestProgress('perfects', perfectCount);
     await updateQuestProgress('level15', level, isSet: true);
     await updateQuestProgress('games', 1);
 
     await _storage.saveStats(state);
     return;
+  }
+
+  void _updateBadgesProgress(int score, int level, int maxCombo) {
+    final updatedBadges = state.badges.map((badge) {
+      if (badge.isUnlocked) return badge;
+
+      int newProgress = badge.progress;
+      switch (badge.id) {
+        case 'score_100':
+        case 'score_500':
+          if (score > newProgress) newProgress = score;
+          break;
+        case 'level_10':
+          if (level > newProgress) newProgress = level;
+          break;
+        case 'combo_10':
+          if (maxCombo > newProgress) newProgress = maxCombo;
+          break;
+        case 'games_50':
+          newProgress = state.gamesPlayed;
+          break;
+        case 'perfect_100':
+          newProgress = state.perfectPlacements;
+          break;
+      }
+
+      bool unlocked = newProgress >= badge.goal;
+      return badge.copyWith(
+        progress: newProgress,
+        isUnlocked: unlocked,
+        unlockDate: unlocked ? DateTime.now() : null,
+      );
+    }).toList();
+
+    state = state.copyWith(badges: updatedBadges);
   }
 
   int getLastEarnedCoins(int score, int perfectCount) {
@@ -146,6 +199,24 @@ class PlayerStatsNotifier extends StateNotifier<PlayerStats> {
   Future<void> equipSkin(String skinId) async {
     if (!state.unlockedSkins.contains(skinId)) return;
     state = state.copyWith(activeSkin: skinId);
+    await _storage.saveStats(state);
+  }
+
+  Future<bool> buyTheme(String themeId, int price) async {
+    if (state.coins < price) return false;
+    if (state.unlockedThemes.contains(themeId)) return false;
+
+    state = state.copyWith(
+      coins: state.coins - price,
+      unlockedThemes: [...state.unlockedThemes, themeId],
+    );
+    await _storage.saveStats(state);
+    return true;
+  }
+
+  Future<void> equipTheme(String themeId) async {
+    if (!state.unlockedThemes.contains(themeId)) return;
+    state = state.copyWith(activeTheme: themeId);
     await _storage.saveStats(state);
   }
 

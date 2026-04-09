@@ -14,44 +14,180 @@ class StatsScreen extends ConsumerWidget {
     final stats = ref.watch(playerStatsProvider);
     final loc = ref.watch(locProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(loc.stats),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [AppColors.background, Color(0xFF1a1a2e)],
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(loc.stats),
+          centerTitle: true,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          bottom: TabBar(
+            indicatorColor: AppColors.primary,
+            indicatorSize: TabBarIndicatorSize.label,
+            labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+            tabs: [
+              Tab(text: loc.stats),
+              Tab(text: loc.badgesTab),
+            ],
           ),
         ),
-        child: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppDimensions.paddingL),
-                child: Column(
-                   children: [
-                    _buildHighScoreCard(stats.highScore, loc),
-                    const SizedBox(height: AppDimensions.paddingL),
-                    _buildStatsGrid(stats, loc),
-                    const SizedBox(height: AppDimensions.paddingL),
-                    _buildRecentScores(stats.recentScores, loc),
-                    const SizedBox(height: AppDimensions.paddingL),
-                    _buildResetButton(context, ref, loc),
-                  ],
-                 ),
-              ),
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [AppColors.background, Color(0xFF1a1a2e)],
             ),
+          ),
+          child: TabBarView(
+            children: [
+              // Tab 1: Stats
+              SafeArea(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(AppDimensions.paddingL),
+                      child: Column(
+                        children: [
+                          _buildHighScoreCard(stats.highScore, loc),
+                          const SizedBox(height: AppDimensions.paddingL),
+                          _buildStatsGrid(stats, loc),
+                          const SizedBox(height: AppDimensions.paddingXL),
+                          _buildRecentScores(stats.recentScores, loc),
+                          const SizedBox(height: AppDimensions.paddingL),
+                          _buildResetButton(context, ref, loc),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Tab 2: Badges
+              SafeArea(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: _buildBadgesGrid(stats.badges),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildBadgesGrid(List<AchievementBadge> badges) {
+    if (badges.isEmpty) return const Center(child: CircularProgressIndicator());
+    
+    return GridView.builder(
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        childAspectRatio: 0.7,
+        mainAxisSpacing: AppDimensions.paddingS,
+        crossAxisSpacing: AppDimensions.paddingS,
+      ),
+      itemCount: badges.length,
+      itemBuilder: (context, index) {
+        final badge = badges[index];
+        return _buildBadgeCard(badge);
+      },
+    );
+  }
+
+  Widget _buildBadgeCard(AchievementBadge badge) {
+    final statusColor = badge.isUnlocked ? AppColors.primary : Colors.grey.withAlpha(100);
+    
+    return Container(
+      padding: const EdgeInsets.all(AppDimensions.paddingM),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppDimensions.borderRadiusL),
+        border: Border.all(
+          color: badge.isUnlocked ? AppColors.primary.withAlpha(100) : Colors.white10,
+          width: 2,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: statusColor.withAlpha(20),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              _getBadgeIcon(badge.iconName),
+              color: statusColor,
+              size: 24,
+            ),
+          ),
+          const SizedBox(height: AppDimensions.paddingS),
+          Text(
+            badge.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 11,
+              color: badge.isUnlocked ? Colors.white : Colors.white38,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            badge.description,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 8, color: Colors.white24),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          if (!badge.isUnlocked)
+            Column(
+              children: [
+                LinearProgressIndicator(
+                  value: badge.progress / badge.goal,
+                  backgroundColor: Colors.white10,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary.withAlpha(100)),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${badge.progress}/${badge.goal}',
+                  style: const TextStyle(fontSize: 9, color: Colors.white38),
+                ),
+              ],
+            )
+          else
+            Text(
+              'AÇILDI!',
+              style: TextStyle(
+                fontSize: 10, 
+                fontWeight: FontWeight.bold, 
+                color: AppColors.success.withAlpha(200),
+              ),
+            ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms).scale(delay: 100.ms);
+  }
+
+  IconData _getBadgeIcon(String name) {
+    switch (name) {
+      case 'architecture': return Icons.architecture;
+      case 'construction': return Icons.construction;
+      case 'height': return Icons.height;
+      case 'center_focus_strong': return Icons.center_focus_strong;
+      case 'military_tech': return Icons.military_tech;
+      case 'stars': return Icons.stars;
+      default: return Icons.emoji_events;
+    }
   }
 
   Widget _buildHighScoreCard(int highScore, Loc loc) {
@@ -152,19 +288,19 @@ class StatsScreen extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: color, size: 28),
+          Icon(icon, color: color, size: 24),
           const SizedBox(height: AppDimensions.paddingXS),
           Text(
             value,
             style: const TextStyle(
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),
           Text(
             label,
             style: const TextStyle(
-              fontSize: 12,
+              fontSize: 11,
               color: AppColors.textSecondary,
             ),
             textAlign: TextAlign.center,

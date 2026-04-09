@@ -14,6 +14,22 @@ class AudioService {
 
   Future<void> init() async {
     try {
+      await AudioPlayer.global.setAudioContext(AudioContext(
+        iOS: AudioContextIOS(
+          category: AVAudioSessionCategory.playback,
+          options: {
+            AVAudioSessionOptions.duckOthers,
+            AVAudioSessionOptions.defaultToSpeaker,
+          },
+        ),
+        android: AudioContextAndroid(
+          isSpeakerphoneOn: true,
+          stayAwake: true,
+          contentType: AndroidContentType.music,
+          usageType: AndroidUsageType.game,
+          audioFocus: AndroidAudioFocus.gain,
+        ),
+      ));
       await _sfxPlayer.setReleaseMode(ReleaseMode.stop);
       await _musicPlayer.setReleaseMode(ReleaseMode.loop);
     } catch (_) {}
@@ -106,8 +122,13 @@ class AudioService {
   Future<void> _playGeneratedSfx(Uint8List bytes, {double volume = 0.5}) async {
     if (!_soundEnabled) return;
     try {
-      await _sfxPlayer.play(BytesSource(bytes), volume: volume);
-    } catch (_) {}
+      // Windows platformu için çalmadan önce durdurup sıfırlamak stabiliteyi artırır
+      await _sfxPlayer.stop();
+      await _sfxPlayer.setVolume(volume);
+      await _sfxPlayer.play(BytesSource(bytes));
+    } catch (_) {
+      // MediaEngine Shutdown gibi platform hatalarını sessizce yoksay
+    }
   }
 
   // 12-Tone Scale (C4 to B4)
@@ -162,8 +183,9 @@ class AudioService {
   }
 
   Future<void> playGameOver() async {
-    final bytes = _generateWav(80, 0.8, volume: 0.5);
-    await _playGeneratedSfx(bytes);
+    // Daha dramatik ve "profesyonel" bir oyun bitti sesi (descending deep thud)
+    final bytes = _generateWav(60, 1.2, volume: 0.8, isHarmonic: true); 
+    await _playGeneratedSfx(bytes, volume: 1.0);
   }
 
   Future<void> playClick() async {
@@ -179,12 +201,19 @@ class AudioService {
   Future<void> startMusic() async {
     if (!_musicEnabled) return;
     try {
-      await _musicPlayer.play(AssetSource('audio/music.wav'), volume: 0.3);
+       // Bazı cihazlarda AssetSource asenkron olarak takılabiliyor, yüklenmesini bekleyelim
+       await _musicPlayer.setSourceAsset('audio/music.wav');
+       await _musicPlayer.resume();
+       await _musicPlayer.setVolume(0.3);
     } catch (_) {
-      // Fallback to synthetic if file fails
-      final bytes = _generateWav(110, 0.4, volume: 0.1);
-      await _musicPlayer.play(BytesSource(bytes), volume: 0.2);
+      // Fallback: Daha gelişmiş bir sentetik ambiyans
+      _playSyntheticAmbience();
     }
+  }
+
+  void _playSyntheticAmbience() async {
+    final bytes = _generateWav(110, 2.0, volume: 0.1, isHarmonic: true);
+    await _musicPlayer.play(BytesSource(bytes), volume: 0.1);
   }
 
   Future<void> stopMusic() async {

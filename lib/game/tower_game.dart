@@ -9,7 +9,6 @@ import '../core/localization.dart';
 import '../providers/game_provider.dart';
 import 'levels/level_config.dart';
 import '../data/models/player_stats.dart';
-import 'components/dynamic_sky.dart';
 import 'components/weather_systems.dart';
 
 enum GameStatus {
@@ -512,7 +511,6 @@ class TowerGame extends FlameGame {
   GameBlock? currentBlock;
   GamePlatform? platform;
   GuideLine? _guideLine;
-  DynamicSkyBackground? _dynamicSky;
 
   int currentLevel = 1;
   int score = 0;
@@ -567,10 +565,19 @@ class TowerGame extends FlameGame {
   late WeatherSystem _weatherSystem;
   double _windForce = 0;
 
-  TowerGame({required this.providerContainer, this.isTimeRush = false}) : super();
+  String activeTheme = 'default';
+  List<Color> _bgColors = [AppColors.background, const Color(0xFF1a1a2e)];
+  Paint? _bgPaint;
+  final Paint _bgSfxPaint = Paint();
+
+  TowerGame({required this.providerContainer, this.isTimeRush = false}) {
+    final stats = providerContainer.read(playerStatsProvider);
+    activeTheme = stats.activeTheme;
+    _updateThemeColors();
+  }
 
   @override
-  Color backgroundColor() => AppColors.background;
+  Color backgroundColor() => Colors.transparent;
 
   @override
   Future<void> onLoad() async {
@@ -585,9 +592,6 @@ class TowerGame extends FlameGame {
     // Center of screen is 320. 470 is 150 pixels below center.
     basePlatformY = gameHeight / 2 + 150; 
 
-    // Dynamic background
-    _dynamicSky = DynamicSkyBackground();
-    world.add(_dynamicSky!);
 
     _weatherSystem = WeatherSystem();
     world.add(_weatherSystem);
@@ -655,7 +659,6 @@ class TowerGame extends FlameGame {
     world.add(_guideLine!);
 
     _updateCamera();
-    _dynamicSky?.updateLevel(currentLevel);
   }
 
   double _getStackTopY() {
@@ -734,7 +737,6 @@ class TowerGame extends FlameGame {
     if (blocksInCurrentLevel >= blocksNeeded) {
       blocksInCurrentLevel = 0;
       currentLevel++;
-      _dynamicSky?.updateLevel(currentLevel);
       _updateWeatherForLevel();
       
       // Full-screen level-up flash
@@ -814,9 +816,16 @@ class TowerGame extends FlameGame {
         currentBlockWidth = block.blockWidth;
       }
 
-      final basePoints = (block.blockWidth * 10).round();
-      final bonus = combo * 50;
-      score += basePoints + bonus;
+      // Scoring: Minimal points
+      final int basePoints = 10;
+      final int comboBonus = (combo > 2) ? (combo - 2) * 2 : 0;
+      final int totalPoints = basePoints + comboBonus;
+      score += totalPoints;
+
+      // Coin Earning
+      int earnedCoins = 2;
+      if (combo >= 5) earnedCoins += 5; // Bonus coins for long combos
+      providerContainer.read(playerStatsProvider.notifier).addCoins(earnedCoins);
 
       // Particle burst and flash line
       world.add(ParticleBurst(
@@ -831,26 +840,36 @@ class TowerGame extends FlameGame {
         position: Vector2(block.position.x, landingY), // at the seam
       ));
 
-      // Floating text
-      _showFloatingText('${loc.perfect} +${basePoints + bonus}', AppColors.success, block.position.clone()..y -= 30, fontSize: 28);
+      // Floating text & Motivational messages
+      String msg = loc.perfect;
+      if (combo >= 15) {
+        msg = 'EFSANEVİ! 🔥';
+      } else if (combo >= 10) {
+        msg = 'İNANILMAZ! ✨';
+      } else if (combo >= 5) {
+        msg = 'HARİKA! 🌟';
+      } else if (combo >= 3) {
+        msg = 'SÜPER! 👍';
+      }
 
-      _shakeScreen(2.0); // Reduced shake
-      _hitStopTime = 0.05; // Slightly reduced hit-stop
-      _punchY = 12.0; // Reduced tower punch
-      _targetZoom = min(1.0 + (combo * 0.02), 1.15); // Less extreme zoom
+      _showFloatingText('$msg +$totalPoints', AppColors.success, block.position.clone()..y -= 30, fontSize: combo >= 5 ? 28 : 22);
+
+      _shakeScreen(2.0); 
+      _hitStopTime = 0.05; 
+      _punchY = 12.0; 
+      _targetZoom = min(1.0 + (combo * 0.02), 1.15); 
 
       try {
         providerContainer.read(hapticServiceProvider).perfect();
-        // Perfect yapıldığında nota combo ile daha tok (harmonic) çalsın
         providerContainer.read(audioServiceProvider).playNote(placedBlocks.length, isPerfect: true);
       } catch (_) {}
 
-      // Life recovery logic: 10 perfects in a row = +1 life
+      // Life recovery: 10 perfects in a row = +1 life
       if (combo > 0 && combo % 10 == 0) {
         if (lives < maxLives) {
           lives++;
           onLivesChanged?.call(lives);
-          _showFloatingText('+1 CAN!', AppColors.success, block.position.clone()..y -= 50, fontSize: 30);
+          _showFloatingText('+1 CAN! ❤️', AppColors.success, block.position.clone()..y -= 60, fontSize: 30);
         }
       }
 
@@ -894,16 +913,20 @@ class TowerGame extends FlameGame {
       _targetZoom = 1.0; // Reset zoom on slice
 
       if (result == PlacementResult.good) {
-        final basePoints = (newWidth * 8).round();
+        final int basePoints = 5;
         score += basePoints;
+        
+        // Earn 1 coin for good placement
+        providerContainer.read(playerStatsProvider.notifier).addCoins(1);
+
         _showFloatingText('${loc.good} +$basePoints', AppColors.warning, block.position.clone()..y -= 30);
-        _shakeScreen(2.5); // Reduced
+        _shakeScreen(2.5); 
         _hitStopTime = 0.02; 
         _punchY = 5.0; 
         
         world.add(FlashLine(
           lineWidth: newWidth,
-          position: Vector2(newCenterX, landingY), // Flash at the seam
+          position: Vector2(newCenterX, landingY), 
         ));
 
         // Small particle burst
@@ -916,7 +939,6 @@ class TowerGame extends FlameGame {
 
         try {
           providerContainer.read(hapticServiceProvider).medium();
-          // Good vuruşlarda normal yerleşim notası çalınsın (zaten _onBlockLanded içinde çalıyor)
         } catch (_) {}
 
         // Time Rush: +1 second for good
@@ -925,7 +947,7 @@ class TowerGame extends FlameGame {
           onTimeUpdate?.call(timeLeft);
         }
       } else {
-        final basePoints = (newWidth * 4).round();
+        final int basePoints = 2;
         score += basePoints;
         _showFloatingText('+$basePoints', AppColors.textSecondary, block.position.clone()..y -= 30, fontSize: 18);
         _shakeScreen(4.0);
@@ -1102,11 +1124,8 @@ class TowerGame extends FlameGame {
       return; // Freeze the game physics
     }
 
-    super.update(dt);
-
-    if (status == GameStatus.paused) return;
-    
     _globalTime += dt;
+    super.update(dt);
 
     // Smooth camera Y tracking
     if ((currentCameraY - targetCameraY).abs() > 0.5) {
@@ -1245,6 +1264,82 @@ class TowerGame extends FlameGame {
     _showFloatingText(rewardText, Colors.amber, Vector2(180, 280), fontSize: 28);
   }
 
+  void _updateThemeColors() {
+    switch (activeTheme) {
+      case 'cyberpunk':
+        _bgColors = [const Color(0xFF0F0C29), const Color(0xFF302B63), const Color(0xFF24243E)];
+        break;
+      case 'space':
+        _bgColors = [const Color(0xFF000000), const Color(0xFF141E30), const Color(0xFF243B55)];
+        break;
+      case 'sunset':
+        _bgColors = [const Color(0xFFFF512F), const Color(0xFFDD2476)];
+        break;
+      default:
+        _bgColors = [AppColors.background, const Color(0xFF1a1a2e)];
+    }
+    _bgPaint = null; // Forces re-creation in render if needed, or we can pre-create
+  }
+
+  @override
+  void render(Canvas canvas) {
+    // Draw background gradient
+    _bgPaint ??= Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: _bgColors,
+      ).createShader(Rect.fromLTWH(0, 0, size.x, size.y));
+    
+    // Fill the background
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.x, size.y), _bgPaint!);
+
+    // Draw some theme-specific subtle effects
+    if (activeTheme == 'cyberpunk') {
+      _drawCyberGrid(canvas);
+    } else if (activeTheme == 'space') {
+      _drawSpaceStars(canvas);
+    }
+
+    super.render(canvas);
+  }
+
+  void _drawCyberGrid(Canvas canvas) {
+    final gridPaint = _bgSfxPaint
+      ..color = const Color(0xFF00F5FF).withAlpha(15)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    
+    // Parallax movement for grid
+    final double offset = (_globalTime * 20) % 40;
+    
+    const double spacing = 40;
+    for (double x = 0; x < size.x; x += spacing) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.y), gridPaint);
+    }
+    for (double y = offset; y < size.y; y += spacing) {
+      canvas.drawLine(Offset(0, y), Offset(size.x, y), gridPaint);
+    }
+  }
+
+  final List<Offset> _starPositions = [];
+  final List<double> _starSizes = [];
+
+  void _drawSpaceStars(Canvas canvas) {
+    if (_starPositions.isEmpty) {
+      final rng = Random(42);
+      for (int i = 0; i < 40; i++) {
+         _starPositions.add(Offset(rng.nextDouble() * size.x, rng.nextDouble() * size.y));
+         _starSizes.add(rng.nextDouble() * 1.5);
+      }
+    }
+
+    final starPaint = _bgSfxPaint..color = Colors.white.withAlpha(80);
+    for (int i = 0; i < _starPositions.length; i++) {
+       canvas.drawCircle(_starPositions[i], _starSizes[i], starPaint);
+    }
+  }
+
   void _updateWeatherForLevel() {
     final settings = providerContainer.read(settingsProvider);
     _weatherSystem.isEnabled = settings['weatherEffectsEnabled'] ?? true;
@@ -1294,35 +1389,46 @@ class LevelUpFlash extends PositionComponent {
       final textT = ((t - 0.2) / 0.8).clamp(0.0, 1.0);
       final textOpacity = (textT < 0.7 ? textT / 0.7 : 1.0 - ((textT - 0.7) / 0.3)).clamp(0.0, 1.0);
       final yOffset = -textT * 60;
-      final scale = 1.0 + (1.0 - textT) * 0.4; // starts bigger, shrinks to normal
+      final scale = 1.0 + (1.0 - textT) * 0.4;
+
+      canvas.save();
+      canvas.translate(0, yOffset);
+      canvas.scale(scale);
 
       // Outer glow ring
       final glowPaint = Paint()
         ..color = const Color(0xFFFBBF24).withAlpha((textOpacity * 80).round())
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20);
-      canvas.drawCircle(Offset(0, yOffset), 60 * scale, glowPaint);
+      canvas.drawCircle(Offset.zero, 60, glowPaint);
 
       // LEVEL text
       _drawCenteredText(
         canvas,
         'LEVEL $level',
-        Offset(0, yOffset - 10),
-        fontSize: 38 * scale,
+        Offset.zero - const Offset(0, 10),
+        fontSize: 38,
         color: Colors.white.withAlpha((textOpacity * 255).round()),
         shadow: Colors.black.withAlpha((textOpacity * 160).round()),
+        isMainTitle: true,
       );
 
       // Tier label
       _drawCenteredText(
         canvas,
         LevelManager.getTierName(level).toUpperCase(),
-        Offset(0, yOffset + 30),
-        fontSize: 16 * scale,
+        const Offset(0, 30),
+        fontSize: 16,
         color: const Color(0xFFFBBF24).withAlpha((textOpacity * 255).round()),
         shadow: Colors.black.withAlpha((textOpacity * 100).round()),
+        isMainTitle: false,
       );
+      
+      canvas.restore();
     }
   }
+
+  TextPainter? _titlePainter;
+  TextPainter? _tierPainter;
 
   void _drawCenteredText(
     Canvas canvas,
@@ -1331,20 +1437,20 @@ class LevelUpFlash extends PositionComponent {
     required double fontSize,
     required Color color,
     required Color shadow,
+    required bool isMainTitle,
   }) {
-    final tp = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: TextStyle(
-          fontSize: fontSize,
-          fontWeight: FontWeight.w900,
-          color: color,
-          letterSpacing: 2,
-          shadows: [Shadow(color: shadow, blurRadius: 8, offset: const Offset(0, 2))],
-        ),
+    final tp = isMainTitle ? (_titlePainter ??= TextPainter(textDirection: TextDirection.ltr)) 
+                           : (_tierPainter ??= TextPainter(textDirection: TextDirection.ltr));
+    
+    tp.text = TextSpan(
+      text: text,
+      style: TextStyle(
+        fontSize: fontSize,
+        fontWeight: FontWeight.w900,
+        color: color,
+        letterSpacing: 2,
+        shadows: [Shadow(color: shadow, blurRadius: 8, offset: const Offset(0, 2))],
       ),
-      textDirection: TextDirection.ltr,
-      textAlign: TextAlign.center,
     );
     tp.layout();
     tp.paint(canvas, center + Offset(-tp.width / 2, -tp.height / 2));
@@ -1373,32 +1479,37 @@ class _FloatingTextComponent extends PositionComponent {
     this.fontSize = 22,
   }) : super(position: pos, anchor: Anchor.center);
 
+  TextPainter? _tp;
+
   @override
   void render(Canvas canvas) {
     final opacity = (1.0 - (life / maxLife)).clamp(0.0, 1.0);
     final scale = 1.0 + life * 0.2;
 
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: TextStyle(
-          color: color.withAlpha((opacity * 255).round()),
-          fontSize: fontSize * scale,
-          fontWeight: FontWeight.bold,
-          shadows: [
-            Shadow(
-              color: Colors.black.withAlpha((opacity * 0.5 * 255).round()),
-              blurRadius: 4,
-              offset: const Offset(1, 1),
-            ),
-          ],
-        ),
+    _tp ??= TextPainter(textDirection: TextDirection.ltr);
+    _tp!.text = TextSpan(
+      text: text,
+      style: TextStyle(
+        color: color.withAlpha((opacity * 255).round()),
+        fontSize: fontSize,
+        fontWeight: FontWeight.bold,
+        shadows: [
+          Shadow(
+            color: Colors.black.withAlpha((opacity * 0.5 * 255).round()),
+            blurRadius: 4,
+            offset: const Offset(1, 1),
+          ),
+        ],
       ),
-      textDirection: TextDirection.ltr,
-      textAlign: TextAlign.center,
     );
-    textPainter.layout();
-    textPainter.paint(canvas, Offset(-textPainter.width / 2, -textPainter.height / 2));
+    
+    _tp!.layout();
+    
+    canvas.save();
+    canvas.translate(0, 0); // already centered by position
+    canvas.scale(scale);
+    _tp!.paint(canvas, Offset(-_tp!.width / 2, -_tp!.height / 2));
+    canvas.restore();
   }
 
   @override

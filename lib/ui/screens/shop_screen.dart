@@ -35,6 +35,53 @@ class PowerUpItem {
   });
 }
 
+class ThemeItem {
+  final String id;
+  final String title;
+  final int price;
+  final List<Color> bgColors;
+  final IconData icon;
+
+  const ThemeItem({
+    required this.id,
+    required this.title,
+    required this.price,
+    required this.bgColors,
+    required this.icon,
+  });
+}
+
+const List<ThemeItem> allThemes = [
+  ThemeItem(
+    id: 'default',
+    title: 'Standart',
+    price: 0,
+    bgColors: [AppColors.background, Color(0xFF1a1a2e)],
+    icon: Icons.palette,
+  ),
+  ThemeItem(
+    id: 'cyberpunk',
+    title: 'Cyberpunk',
+    price: 800,
+    bgColors: [Color(0xFF0F0C29), Color(0xFF302B63), Color(0xFF24243E)],
+    icon: Icons.electrical_services,
+  ),
+  ThemeItem(
+    id: 'space',
+    title: 'Uzay Boşluğu',
+    price: 1500,
+    bgColors: [Color(0xFF000000), Color(0xFF141E30), Color(0xFF243B55)],
+    icon: Icons.rocket_launch,
+  ),
+  ThemeItem(
+    id: 'sunset',
+    title: 'Gün Batımı',
+    price: 2000,
+    bgColors: [Color(0xFFFF512F), Color(0xFFDD2476)],
+    icon: Icons.wb_sunny,
+  ),
+];
+
 const List<PowerUpItem> allPowerUps = [
   PowerUpItem(
     id: 'slowMo',
@@ -119,7 +166,7 @@ class ShopScreen extends ConsumerWidget {
               _buildHeader(context, loc, stats.coins),
               Expanded(
                 child: DefaultTabController(
-                  length: 2,
+                  length: 3,
                   child: Column(
                     children: [
                       TabBar(
@@ -128,52 +175,16 @@ class ShopScreen extends ConsumerWidget {
                         unselectedLabelColor: AppColors.textSecondary,
                         tabs: [
                           Tab(text: loc.skins),
-                          Tab(text: 'YETENEKLER'),
+                          Tab(text: loc.powerups.toUpperCase()),
+                          Tab(text: loc.themesTab.toUpperCase()),
                         ],
                       ),
                       Expanded(
                         child: TabBarView(
                           children: [
-                            // Skins Tab
-                            Padding(
-                              padding: const EdgeInsets.all(AppDimensions.paddingM),
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  final double maxWidth = constraints.maxWidth > 600 ? 600 : constraints.maxWidth;
-                                  return Center(
-                                    child: SizedBox(
-                                      width: maxWidth,
-                                      child: ListView.builder(
-                                        itemCount: allSkins.length,
-                                        itemBuilder: (context, index) {
-                                          return _buildSkinShopCard(context, ref, allSkins[index], stats, loc, index);
-                                        },
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                            // Power-ups Tab
-                            Padding(
-                              padding: const EdgeInsets.all(AppDimensions.paddingM),
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  final double maxWidth = constraints.maxWidth > 600 ? 600 : constraints.maxWidth;
-                                  return Center(
-                                    child: SizedBox(
-                                      width: maxWidth,
-                                      child: ListView.builder(
-                                        itemCount: allPowerUps.length,
-                                        itemBuilder: (context, index) {
-                                          return _buildPowerUpShopCard(context, ref, allPowerUps[index], stats, loc);
-                                        },
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
+                            _buildSkinsTab(context, ref, stats, loc),
+                            _buildPowerUpsTab(context, ref, stats, loc),
+                            _buildThemesTab(context, ref, stats, loc),
                           ],
                         ),
                       ),
@@ -184,6 +195,72 @@ class ShopScreen extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSkinsTab(BuildContext context, WidgetRef ref, dynamic stats, Loc loc) {
+    return Padding(
+      padding: const EdgeInsets.all(AppDimensions.paddingM),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final double maxWidth = constraints.maxWidth > 600 ? 600 : constraints.maxWidth;
+          return Center(
+            child: SizedBox(
+              width: maxWidth,
+              child: ListView.builder(
+                itemCount: allSkins.length,
+                itemBuilder: (context, index) {
+                  return _buildSkinShopCard(context, ref, allSkins[index], stats, loc, index);
+                },
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildPowerUpsTab(BuildContext context, WidgetRef ref, dynamic stats, Loc loc) {
+    return Padding(
+      padding: const EdgeInsets.all(AppDimensions.paddingM),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final double maxWidth = constraints.maxWidth > 600 ? 600 : constraints.maxWidth;
+          return Center(
+            child: SizedBox(
+              width: maxWidth,
+              child: ListView.builder(
+                itemCount: allPowerUps.length,
+                itemBuilder: (context, index) {
+                  return _buildPowerUpShopCard(context, ref, allPowerUps[index], stats, loc);
+                },
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildThemesTab(BuildContext context, WidgetRef ref, dynamic stats, Loc loc) {
+    return Padding(
+      padding: const EdgeInsets.all(AppDimensions.paddingM),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final double maxWidth = constraints.maxWidth > 600 ? 600 : constraints.maxWidth;
+          return Center(
+            child: SizedBox(
+              width: maxWidth,
+              child: ListView.builder(
+                itemCount: allThemes.length,
+                itemBuilder: (context, index) {
+                  return _buildThemeShopCard(context, ref, allThemes[index], stats, loc);
+                },
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -391,22 +468,27 @@ class ShopScreen extends ConsumerWidget {
   }
 
   Widget _buildPowerUpShopCard(BuildContext context, WidgetRef ref, PowerUpItem item, dynamic stats, Loc loc) {
+    String title = '';
     String description = '';
     int currentCount = 0;
+    
     if (item.type == 'slowMo') {
        description = 'Zamanı 5 saniye yavaşlatır.';
+       title = loc.slowMo;
        currentCount = stats.slowMoCount;
     } else if (item.type == 'expand') {
        description = 'Bloğu orijinal genişliğine döndürür.';
+       title = loc.expand;
        currentCount = stats.expandCount;
     } else if (item.type == 'magnet') {
        description = 'Bloğu anında merkeze kilitler.';
+       title = loc.magnet;
        currentCount = stats.magnetCount;
     }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
@@ -415,25 +497,25 @@ class ShopScreen extends ConsumerWidget {
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: item.color.withAlpha(20),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(item.icon, color: item.color, size: 32),
+            child: Icon(item.icon, color: item.color, size: 24),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.id.toUpperCase(),
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary),
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textPrimary),
                 ),
-                Text(description, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                const SizedBox(height: 4),
-                Text('Stok: $currentCount', style: TextStyle(fontSize: 11, color: item.color.withAlpha(200), fontWeight: FontWeight.bold)),
+                Text(description, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                const SizedBox(height: 2),
+                Text('Stok: $currentCount', style: TextStyle(fontSize: 10, color: item.color.withAlpha(200), fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -446,17 +528,104 @@ class ShopScreen extends ConsumerWidget {
                 );
               }
             },
-            icon: const Icon(Icons.monetization_on, size: 16, color: AppColors.warning),
-            label: Text('${item.price}'),
+            icon: const Icon(Icons.monetization_on, size: 14, color: AppColors.warning),
+            label: Text('${item.price}', style: const TextStyle(fontSize: 12)),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.background,
               foregroundColor: AppColors.textPrimary,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               side: const BorderSide(color: Colors.white10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
           ),
         ],
       ),
     ).animate().fadeIn(duration: 400.ms).slideX(begin: 0.1);
+  }
+
+  Widget _buildThemeShopCard(BuildContext context, WidgetRef ref, ThemeItem theme, dynamic stats, Loc loc) {
+    final isUnlocked = stats.unlockedThemes.contains(theme.id);
+    final isActive = stats.activeTheme == theme.id;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isActive ? AppColors.primary : Colors.white10,
+          width: isActive ? 1.5 : 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: theme.bgColors,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(theme.icon, color: Colors.white70, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  theme.title,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textPrimary),
+                ),
+                Text(
+                  isActive ? loc.equipped : (isUnlocked ? loc.locked : '${theme.price} Coin'),
+                  style: TextStyle(fontSize: 10, color: isActive ? AppColors.success : AppColors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          if (isActive)
+            const Icon(Icons.check_circle, color: AppColors.success, size: 20)
+          else if (isUnlocked)
+            ElevatedButton(
+              onPressed: () => ref.read(playerStatsProvider.notifier).equipTheme(theme.id),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary.withAlpha(200),
+                minimumSize: const Size(70, 30),
+                padding: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: Text(loc.equip, style: const TextStyle(fontSize: 11)),
+            )
+          else
+            ElevatedButton.icon(
+              onPressed: () async {
+                final success = await ref.read(playerStatsProvider.notifier).buyTheme(theme.id, theme.price);
+                if (!success && context.mounted) {
+                   ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(loc.notEnoughCoins), backgroundColor: AppColors.error),
+                  );
+                }
+              },
+              icon: const Icon(Icons.monetization_on, size: 14, color: AppColors.warning),
+              label: Text('${theme.price}', style: const TextStyle(fontSize: 11)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.background,
+                minimumSize: const Size(70, 30),
+                padding: EdgeInsets.zero,
+                side: const BorderSide(color: Colors.white10),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+        ],
+      ),
+    ).animate().fadeIn().slideX(begin: 0.1);
   }
 }

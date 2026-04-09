@@ -22,7 +22,7 @@ void main() async {
   await storageService.init();
 
   final audioService = AudioService();
-  await audioService.init();
+  audioService.init(); // Don't await, let it init in background
 
   runApp(
     ProviderScope(

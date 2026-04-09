@@ -58,13 +58,13 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                   ),
                   child: Column(
                     children: [
-                      const SizedBox(height: AppDimensions.paddingXL),
+                      const SizedBox(height: AppDimensions.paddingL),
                       _buildTitle(context, loc),
-                      const SizedBox(height: AppDimensions.paddingXL),
+                      const SizedBox(height: AppDimensions.paddingM),
                       _buildHighScore(stats.highScore),
-                      const SizedBox(height: AppDimensions.paddingXL),
+                      const SizedBox(height: AppDimensions.paddingS),
                       _buildMenuButtons(context, ref, loc, stats),
-                      const SizedBox(height: AppDimensions.paddingXL),
+                      const SizedBox(height: AppDimensions.paddingS),
                     ],
                   ),
                 ),
@@ -80,8 +80,8 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
     return Column(
       children: [
         Container(
-          width: 120,
-          height: 120,
+          width: 70,
+          height: 70,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [AppColors.primary, AppColors.accent],
@@ -97,14 +97,14 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
           ),
           child: const Icon(
             Icons.view_in_ar,
-            size: 60,
+            size: 35,
             color: Colors.white,
           ),
         )
             .animate()
             .scale(duration: 600.ms, curve: Curves.elasticOut)
             .shimmer(delay: 600.ms, duration: 1200.ms),
-        const SizedBox(height: AppDimensions.paddingL),
+        const SizedBox(height: AppDimensions.paddingM),
         ShaderMask(
           shaderCallback: (bounds) => const LinearGradient(
             colors: [AppColors.primary, AppColors.accent],
@@ -112,6 +112,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
           child: Text(
             loc.appName,
             style: Theme.of(context).textTheme.displayMedium?.copyWith(
+              fontSize: 36,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
@@ -120,12 +121,13 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
             .animate()
             .fadeIn(duration: 500.ms)
             .slideY(begin: -0.3, curve: Curves.easeOut),
-        const SizedBox(height: AppDimensions.paddingS),
+        const SizedBox(height: 4),
         Text(
-          'Stack Tower',
+          'INFINITY STACK',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            fontSize: 14,
             color: AppColors.textSecondary,
-            letterSpacing: 4,
+            letterSpacing: 3,
           ),
         ).animate().fadeIn(delay: 300.ms),
       ],
@@ -199,7 +201,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
             ),
           ],
         ),
-        const SizedBox(height: AppDimensions.paddingM),
+        const SizedBox(height: AppDimensions.paddingS),
         Row(
           children: [
             Expanded(
@@ -217,7 +219,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
             ),
           ],
         ),
-        const SizedBox(height: AppDimensions.paddingM),
+        const SizedBox(height: AppDimensions.paddingS),
         Row(
           children: [
             Expanded(
@@ -255,16 +257,15 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
         onTap: () => _onQuestsPressed(context, ref),
         borderRadius: BorderRadius.circular(AppDimensions.borderRadiusL),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingM),
+          padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingS),
           child: Stack(
             clipBehavior: Clip.none,
             alignment: Alignment.center,
             children: [
               Column(
                 children: [
-                  const Icon(Icons.assignment, size: AppDimensions.iconSizeL, color: AppColors.primary),
-                  const SizedBox(height: AppDimensions.paddingXS),
-                  Text(loc.powerups), // Using powerups for 'Quests' as placeholder if no quest key
+                  const Icon(Icons.assignment, size: 24, color: AppColors.primary),
+                  Text(loc.quests), 
                 ],
               ),
               if (hasUnclaimed)
@@ -304,7 +305,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
         onTap: onPressed,
         borderRadius: BorderRadius.circular(AppDimensions.borderRadiusXL),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingL),
+          padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
@@ -316,12 +317,12 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
           ),
           child: Column(
             children: [
-              Icon(icon, size: 36, color: color),
-              const SizedBox(height: AppDimensions.paddingS),
+              Icon(icon, size: 24, color: color),
+              const SizedBox(height: AppDimensions.paddingXS),
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: FontWeight.bold,
                   color: color,
                 ),
@@ -348,12 +349,12 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
         onTap: onPressed,
         borderRadius: BorderRadius.circular(AppDimensions.borderRadiusL),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingM),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           child: Column(
             children: [
-              Icon(icon, size: AppDimensions.iconSizeL),
-              const SizedBox(height: AppDimensions.paddingXS),
-              Text(label),
+              Icon(icon, size: 24),
+              const SizedBox(height: 4),
+              Text(label, style: const TextStyle(fontSize: 12)),
             ],
           ),
         ),

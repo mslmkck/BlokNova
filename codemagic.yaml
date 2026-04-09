@@ -1,87 +1,35 @@
 workflows:
-  android-workflow:
-    name: Android Build
-    max_build_duration: 30
-    environment:
-      flutter: stable
-      dart: stable
-    triggering:
-      events:
-        - push
-        - pull_request
-      branch_patterns:
-        - pattern: main
-          include: true
-        - pattern: release/*
-          include: true
-    scripts:
-      - name: Get dependencies
-        script: |
-          flutter pub get
-      - name: Analyze code
-        script: |
-          flutter analyze
-      - name: Build APK
-        script: |
-          flutter build apk --debug
-    artifacts:
-      - path: build/app/outputs/flutter-apk/*.apk
-        name: app-debug.apk
-        type: application/vnd.android.package-archive
-
-  ios-workflow:
-    name: iOS Build
+  ios-release:
+    name: iOS Release
     max_build_duration: 60
+    instance_type: mac_mini_m1
     environment:
       flutter: stable
-      dart: stable
       xcode: latest
       cocoapods: default
-    triggering:
-      events:
-        - push
-        - pull_request
-      branch_patterns:
-        - pattern: main
-          include: true
     scripts:
-      - name: Get dependencies
+      - name: Set up code signing settings on Codemagic
         script: |
-          flutter pub get
-          bundle install
-          bundle exec pod install
-      - name: Analyze code
+          keychain initialize
+          app-store-connect fetch-signing-files "com.bloknova.appname" --type IOS_APP_STORE --create
+          keychain add-certificates
+      - name: Get Flutter packages
         script: |
-          flutter analyze
-      - name: Build iOS
+          flutter packages pub get
+      - name: Install pods
         script: |
-          flutter build ipa --debug
+          find . -name "Podfile" -execdir pod install \;
+      - name: Flutter build ipa
+        script: |
+          flutter build ipa --release \
+            --export-options-plist=$HOME/export_options.plist
     artifacts:
-      - path: build/app/outputs/flutter-ios/*.ipa
-        type: application/octet-stream
-
-  release-workflow:
-    name: Release Build
-    max_build_duration: 30
-    environment:
-      flutter: stable
-      dart: stable
-      android_signing:
-        - keystore
-    triggering:
-      events:
-        - tag
-      branch_patterns:
-        - pattern: release/*
-          include: true
-    scripts:
-      - name: Get dependencies
-        script: |
-          flutter pub get
-      - name: Build Release APK
-        script: |
-          flutter build apk --release
-    artifacts:
-      - path: build/app/outputs/flutter-apk/*.apk
-        name: app-release.apk
-        type: application/vnd.android.package-archive
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - flutter_drive.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        beta_groups:
+          - Internal Testers

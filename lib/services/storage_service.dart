@@ -13,9 +13,14 @@ class StorageService {
   }
 
   Future<PlayerStats> loadStats() async {
-    final String? data = _prefs.getString(_statsKey);
-    if (data == null) return PlayerStats(lastQuestReset: DateTime.now());
-    return PlayerStats.fromJson(jsonDecode(data));
+    try {
+      final String? data = _prefs.getString(_statsKey);
+      if (data == null) return PlayerStats(lastQuestReset: DateTime.now().subtract(const Duration(days: 1)));
+      return PlayerStats.fromJson(jsonDecode(data));
+    } catch (e) {
+      // If JSON is broken or model changed, return default stats
+      return PlayerStats(lastQuestReset: DateTime.now());
+    }
   }
 
   Future<void> saveStats(PlayerStats stats) async {
@@ -50,8 +55,18 @@ class StorageService {
   }
 
   Future<Map<String, dynamic>> loadSettings() async {
-    final String? data = _prefs.getString(_settingsKey);
-    if (data == null) {
+    try {
+      final String? data = _prefs.getString(_settingsKey);
+      if (data == null) {
+        return {
+          'soundEnabled': true,
+          'vibrationEnabled': true,
+          'musicEnabled': true,
+          'weatherEffectsEnabled': true,
+        };
+      }
+      return jsonDecode(data);
+    } catch (e) {
       return {
         'soundEnabled': true,
         'vibrationEnabled': true,
@@ -59,7 +74,6 @@ class StorageService {
         'weatherEffectsEnabled': true,
       };
     }
-    return jsonDecode(data);
   }
 
   Future<void> saveSettings(Map<String, dynamic> settings) async {

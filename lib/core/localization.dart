@@ -5,7 +5,7 @@ import '../providers/game_provider.dart';
 enum AppLang { tr, en, de, ru }
 
 class Loc {
-  final String appName = 'Block Tower';
+  final String appName;
   final String play;
   final String settings;
   final String stats;
@@ -65,8 +65,14 @@ class Loc {
   final String selectMode;
   final String skins;
   final String powerups;
+  final String quests;
+  final String badgesTab;
+  final String themesTab;
   final String weatherEffects;
   final String weatherEffectsSubtitle;
+  final String slowMo;
+  final String expand;
+  final String magnet;
   // Privacy Policy
   final String privacyPolicy;
   final String dataCollection;
@@ -83,6 +89,7 @@ class Loc {
   final String iAccept;
 
   const Loc({
+    required this.appName,
     required this.play,
     required this.settings,
     required this.stats,
@@ -155,11 +162,18 @@ class Loc {
     required this.decline,
     required this.accept,
     required this.iAccept,
+    required this.slowMo,
+    required this.expand,
+    required this.magnet,
+    required this.badgesTab,
+    required this.themesTab,
+    required this.quests,
   });
 }
 
 const Map<AppLang, Loc> _translations = {
   AppLang.tr: Loc(
+    appName: 'BlokNova',
     play: 'Oyna',
     settings: 'Ayarlar',
     stats: 'İstatistikler',
@@ -232,8 +246,15 @@ const Map<AppLang, Loc> _translations = {
     decline: 'Reddet',
     accept: 'Kabul Et',
     iAccept: 'Gizlilik politikasını okudum ve kabul ediyorum',
+    slowMo: 'YAVAŞLAT',
+    expand: 'GENİŞLET',
+    magnet: 'MIKNATIS',
+    badgesTab: 'Rozetler',
+    themesTab: 'Temalar',
+    quests: 'Görevler',
   ),
   AppLang.en: Loc(
+    appName: 'BlokNova',
     play: 'Play',
     settings: 'Settings',
     stats: 'Statistics',
@@ -306,8 +327,15 @@ const Map<AppLang, Loc> _translations = {
     decline: 'Decline',
     accept: 'Accept',
     iAccept: 'I have read and accept the privacy policy',
+    slowMo: 'SLOW MO',
+    expand: 'EXPAND',
+    magnet: 'MAGNET',
+    badgesTab: 'Badges',
+    themesTab: 'Themes',
+    quests: 'Quests',
   ),
   AppLang.de: Loc(
+    appName: 'BlokNova',
     play: 'Spielen',
     settings: 'Einstellungen',
     stats: 'Statistiken',
@@ -380,8 +408,15 @@ const Map<AppLang, Loc> _translations = {
     decline: 'Ablehnen',
     accept: 'Akzeptieren',
     iAccept: 'Ich habe die Datenschutzrichtlinie gelesen und akzeptiere sie',
+    slowMo: 'ZEITLUPE',
+    expand: 'ERWEITERN',
+    magnet: 'MAGNET',
+    badgesTab: 'Abzeichen',
+    themesTab: 'Themen',
+    quests: 'Aufgaben',
   ),
   AppLang.ru: Loc(
+    appName: 'BlokNova',
     play: 'Играть',
     settings: 'Настройки',
     stats: 'Статистика',
@@ -454,6 +489,12 @@ const Map<AppLang, Loc> _translations = {
     decline: 'Отклонить',
     accept: 'Принять',
     iAccept: 'Я прочитал и принимаю политику конфиденциальности',
+    slowMo: 'ЗАМЕДЛЕНИЕ',
+    expand: 'РАСШИРЕНИЕ',
+    magnet: 'МАГНИТ',
+    badgesTab: 'Значки',
+    themesTab: 'Темы',
+    quests: 'Задания',
   ),
 };
 

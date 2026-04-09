@@ -177,7 +177,7 @@ class _GameScreenState extends ConsumerState<GameScreen> with TickerProviderStat
             color: Colors.lightBlueAccent,
             onPressed: () => _handlePowerUp('slowMo'),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           _buildPowerUpButton(
             icon: Icons.unfold_more,
             label: 'GENİŞLET',
@@ -185,7 +185,7 @@ class _GameScreenState extends ConsumerState<GameScreen> with TickerProviderStat
             color: AppColors.success,
             onPressed: () => _handlePowerUp('expand'),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           _buildPowerUpButton(
             icon: Icons.auto_fix_high,
             label: 'MIKNATIS',
@@ -194,7 +194,7 @@ class _GameScreenState extends ConsumerState<GameScreen> with TickerProviderStat
             onPressed: () => _handlePowerUp('magnet'),
           ),
         ],
-      ).animate().fadeIn(duration: 400.ms).slideX(begin: 0.5),
+      ).animate().fadeIn(duration: 400.ms).slideX(begin: 0.3),
     );
   }
 
@@ -210,11 +210,11 @@ class _GameScreenState extends ConsumerState<GameScreen> with TickerProviderStat
     return GestureDetector(
       onTap: hasStock ? onPressed : null,
       child: Container(
-        width: 64,
-        height: 64,
+        width: 50,
+        height: 50,
         decoration: BoxDecoration(
           color: AppColors.surface.withAlpha(hasStock ? 220 : 100),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: hasStock ? color.withAlpha(150) : Colors.white10,
             width: 2,
@@ -229,11 +229,11 @@ class _GameScreenState extends ConsumerState<GameScreen> with TickerProviderStat
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, color: hasStock ? color : Colors.white24, size: 28),
+                Icon(icon, color: hasStock ? color : Colors.white24, size: 22),
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: 8,
+                    fontSize: 7,
                     fontWeight: FontWeight.bold,
                     color: hasStock ? Colors.white70 : Colors.white10,
                   ),
@@ -244,15 +244,15 @@ class _GameScreenState extends ConsumerState<GameScreen> with TickerProviderStat
               top: -4,
               right: -4,
               child: Container(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
                   color: hasStock ? AppColors.primary : AppColors.surface,
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.background, width: 2),
+                  border: Border.all(color: AppColors.background, width: 1.5),
                 ),
                 child: Text(
                   '$count',
-                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
               ),
             ),

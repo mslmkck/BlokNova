@@ -12,6 +12,10 @@ class PlayerStats {
   final List<String> unlockedSkins;
   final String activeSkin;
   
+  // Themes
+  final List<String> unlockedThemes;
+  final String activeTheme;
+  
   // Power-ups
   final int slowMoCount;
   final int expandCount;
@@ -23,6 +27,9 @@ class PlayerStats {
   
   // Privacy
   final bool privacyAccepted;
+
+  // Badges
+  final List<AchievementBadge> badges;
 
   const PlayerStats({
     this.highScore = 0,
@@ -41,6 +48,9 @@ class PlayerStats {
     this.dailyQuests = const [],
     required this.lastQuestReset,
     this.privacyAccepted = false,
+    this.badges = const [],
+    this.unlockedThemes = const ['default'],
+    this.activeTheme = 'default',
   });
 
   double get averageScore {
@@ -65,6 +75,9 @@ class PlayerStats {
     List<Quest>? dailyQuests,
     DateTime? lastQuestReset,
     bool? privacyAccepted,
+    List<AchievementBadge>? badges,
+    List<String>? unlockedThemes,
+    String? activeTheme,
   }) {
     return PlayerStats(
       highScore: highScore ?? this.highScore,
@@ -83,6 +96,9 @@ class PlayerStats {
       dailyQuests: dailyQuests ?? this.dailyQuests,
       lastQuestReset: lastQuestReset ?? this.lastQuestReset,
       privacyAccepted: privacyAccepted ?? this.privacyAccepted,
+      badges: badges ?? this.badges,
+      unlockedThemes: unlockedThemes ?? this.unlockedThemes,
+      activeTheme: activeTheme ?? this.activeTheme,
     );
   }
 
@@ -97,12 +113,15 @@ class PlayerStats {
     'coins': coins,
     'unlockedSkins': unlockedSkins,
     'activeSkin': activeSkin,
+    'unlockedThemes': unlockedThemes,
+    'activeTheme': activeTheme,
     'slowMoCount': slowMoCount,
     'expandCount': expandCount,
     'magnetCount': magnetCount,
     'dailyQuests': dailyQuests.map((q) => q.toJson()).toList(),
     'lastQuestReset': lastQuestReset.toIso8601String(),
     'privacyAccepted': privacyAccepted,
+    'badges': badges.map((b) => b.toJson()).toList(),
   };
 
   factory PlayerStats.fromJson(Map<String, dynamic> json) {
@@ -123,6 +142,9 @@ class PlayerStats {
       dailyQuests: (json['dailyQuests'] as List?)?.map((q) => Quest.fromJson(q)).toList() ?? [],
       lastQuestReset: json['lastQuestReset'] != null ? DateTime.parse(json['lastQuestReset']) : DateTime.now().subtract(const Duration(days: 1)),
       privacyAccepted: json['privacyAccepted'] ?? false,
+      badges: (json['badges'] as List?)?.map((b) => AchievementBadge.fromJson(b)).toList() ?? [],
+      unlockedThemes: List<String>.from(json['unlockedThemes'] ?? ['default']),
+      activeTheme: json['activeTheme'] ?? 'default',
     );
   }
 }
@@ -219,5 +241,66 @@ class GameResult {
     maxCombo: json['maxCombo'],
     lastPlacement: PlacementQuality.values[json['lastPlacement']],
     timestamp: DateTime.parse(json['timestamp']),
+  );
+}
+
+class AchievementBadge {
+  final String id;
+  final String title;
+  final String description;
+  final String iconName;
+  final bool isUnlocked;
+  final int progress;
+  final int goal;
+  final DateTime? unlockDate;
+
+  const AchievementBadge({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.iconName,
+    this.isUnlocked = false,
+    this.progress = 0,
+    required this.goal,
+    this.unlockDate,
+  });
+
+  AchievementBadge copyWith({
+    bool? isUnlocked,
+    int? progress,
+    DateTime? unlockDate,
+  }) {
+    return AchievementBadge(
+      id: id,
+      title: title,
+      description: description,
+      iconName: iconName,
+      isUnlocked: isUnlocked ?? this.isUnlocked,
+      progress: progress ?? this.progress,
+      goal: goal,
+      unlockDate: unlockDate ?? this.unlockDate,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'description': description,
+    'iconName': iconName,
+    'isUnlocked': isUnlocked,
+    'progress': progress,
+    'goal': goal,
+    'unlockDate': unlockDate?.toIso8601String(),
+  };
+
+  factory AchievementBadge.fromJson(Map<String, dynamic> json) => AchievementBadge(
+    id: json['id'],
+    title: json['title'],
+    description: json['description'],
+    iconName: json['iconName'],
+    isUnlocked: json['isUnlocked'] ?? false,
+    progress: json['progress'] ?? 0,
+    goal: json['goal'] ?? 1,
+    unlockDate: json['unlockDate'] != null ? DateTime.parse(json['unlockDate']) : null,
   );
 }
