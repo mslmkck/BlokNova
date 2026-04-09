@@ -11,7 +11,7 @@ workflows:
       - name: Set up code signing settings on Codemagic
         script: |
           keychain initialize
-          app-store-connect fetch-signing-files "com.bloknova.appname" --type IOS_APP_STORE --create
+          app-store-connect fetch-signing-files "com.mslmkck.bloknova" --type IOS_APP_STORE --create
           keychain add-certificates
       - name: Get Flutter packages
         script: |

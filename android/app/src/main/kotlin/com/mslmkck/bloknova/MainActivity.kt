@@ -1,4 +1,4 @@
-package com.blocktower.block_tower
+package com.mslmkck.bloknova
 
 import io.flutter.embedding.android.FlutterActivity
 

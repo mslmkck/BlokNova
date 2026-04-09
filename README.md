@@ -1,4 +1,4 @@
-# Block Tower - 3D Physics Blok Yerleştirme Oyunu
+# BlokNova - 3D Physics Blok Yerleştirme Oyunu
 
 ![Flutter](https://img.shields.io/badge/Flutter-3.11-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
@@ -6,7 +6,7 @@
 
 ## 📱 Oyun Hakkında
 
-**Block Tower**, fizik tabanlı bir blok istifleme oyunudur. Oyuncu, hareket eden blokları doğru zamanda bırakarak kuleyi yukarı doğru inşa eder. Her 3 blokta bir seviye artar ve oyun zorlaşır.
+**BlokNova**, fizik tabanlı bir blok istifleme oyunudur. Oyuncu, hareket eden blokları doğru zamanda bırakarak kuleyi yukarı doğru inşa eder. Her 3 blokta bir seviye artar ve oyun zorlaşır.
 
 ### 🎮 Nasıl Oynanır
 
