@@ -3,6 +3,8 @@ workflows:
     name: iOS Release
     max_build_duration: 60
     instance_type: mac_mini_m1
+    integrations:
+      app_store_connect: codemagic # EĞER CODEMAGIC'TEKİ INTEGRATION İSMİNİZ FARKLIYSA BURAYI GÜNCELLEYİN
     environment:
       flutter: stable
       xcode: latest
